@@ -117,9 +117,12 @@ public class NotenBot extends TelegramLongPollingBot {
         if (message.getText().startsWith("/login")) {
           String[] parts = message.getText().split(" ");
 
+          System.out.println("Got login request from " + message.getFrom().getFirstName());
           String reply;
           if (new NotenAPI().init(parts[1], parts[2])) {
-            reply = "Login erfolgreich!";
+            reply = "Login erfolgreich!\n"
+                + "Du wirst ab nun von neuen Noten benachrichtigt!";
+            System.out.println("Login success for " + message.getFrom().getFirstName());
 
             try {
               Files.writeString(Path.of(getUsernameFilename(message.getFrom().getId().toString())), parts[1]);
@@ -128,20 +131,24 @@ public class NotenBot extends TelegramLongPollingBot {
             }
             exec(new DeleteMessage(String.valueOf(message.getChatId()), message.getMessageId()));
           } else {
-            reply = "Login fehlgeschlagen!\nBitte melde dich bei Simon.";
+            reply = "Login fehlgeschlagen!\n"
+                + "Bitte melde dich bei Simon.";
+            System.out.println("Login fail for " + message.getFrom().getFirstName());
           }
 
           exec(new SendMessage(String.valueOf(message.getChatId()), reply));
         } else if (message.getText().equals("/stop")) {
+          System.out.println("Got delete request from " + message.getFrom().getFirstName());
+          boolean deleted = false;
           try {
             String username = Files.readString(Path.of(getUsernameFilename(message.getFrom().getId().toString())));
-            boolean deleted = new File(NotenAPI.getGradesFilename(username)).delete();
+            deleted = new File(NotenAPI.getGradesFilename(username)).delete();
             deleted &= Path.of(getUsernameFilename(message.getFrom().getId().toString())).toFile().delete();
-            exec(new SendMessage(message.getChatId().toString(),
-                "Deine Daten wurden " + (deleted ? "erfolgreich " : "") + "geloescht!"));
           } catch (IOException e) {
             e.printStackTrace();
           }
+          exec(new SendMessage(message.getChatId().toString(),
+              "Deine Daten wurden " + (deleted ? "erfolgreich " : "") + "geloescht!"));
         }
       }
     }
