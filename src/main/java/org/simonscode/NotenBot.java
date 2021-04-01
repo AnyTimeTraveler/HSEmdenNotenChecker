@@ -97,9 +97,7 @@ public class NotenBot extends TelegramLongPollingBot {
     if (update.hasMessage()) {
       Message message = update.getMessage();
       if (message.hasText()) {
-        String text = message.getText();
-
-        if (text.startsWith("/start")) {
+        if (message.getText().startsWith("/start")) {
           SendMessage sendMessage = new SendMessage(
               String.valueOf(message.getChatId()),
               "Willkommen!\n" +
@@ -108,15 +106,16 @@ public class NotenBot extends TelegramLongPollingBot {
                   "(ohne Klammern) verwenden,\n" +
                   "um Benachrichtigungen von neuen Noten zu aktivieren.\n" +
                   "\n" +
-                  "Sobald eine neue Note verfuegbar ist,\n" +
-                  "erhaelst du eine Nachricht mit der Note.\n" +
+                  "Sobald eine neue Note verfügbar ist,\n" +
+                  "erhälst du eine Nachricht mit der Note.\n" +
                   "\n" +
-                  "Zum Anhalten des Bots kannst du /stop verwenden.\n"
+                  "Zum Anhalten des Bots kannst du /stop verwenden,\n"
+                  + "dann wird der Bot alle deine Daten löschen.\n"
           );
           exec(sendMessage);
         }
-        if (text.startsWith("/login")) {
-          String[] parts = text.split(" ");
+        if (message.getText().startsWith("/login")) {
+          String[] parts = message.getText().split(" ");
 
           String reply;
           if (new NotenAPI().init(parts[1], parts[2])) {
@@ -133,12 +132,13 @@ public class NotenBot extends TelegramLongPollingBot {
           }
 
           exec(new SendMessage(String.valueOf(message.getChatId()), reply));
-        } else if (text.equals("/stop")) {
+        } else if (message.getText().equals("/stop")) {
           try {
-            String username = Files
-                .readString(Path.of(getUsernameFilename(message.getFrom().getId().toString())));
-            new File(NotenAPI.getGradesFilename(username)).delete();
-            Path.of(getUsernameFilename(message.getFrom().getId().toString())).toFile().delete();
+            String username = Files.readString(Path.of(getUsernameFilename(message.getFrom().getId().toString())));
+            boolean deleted = new File(NotenAPI.getGradesFilename(username)).delete();
+            deleted &= Path.of(getUsernameFilename(message.getFrom().getId().toString())).toFile().delete();
+            exec(new SendMessage(message.getChatId().toString(),
+                "Deine Daten wurden " + (deleted ? "erfolgreich " : "") + "geloescht!"));
           } catch (IOException e) {
             e.printStackTrace();
           }
