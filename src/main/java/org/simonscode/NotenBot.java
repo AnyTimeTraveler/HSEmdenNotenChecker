@@ -67,7 +67,7 @@ public class NotenBot extends TelegramLongPollingBot {
                       .filter(Objects::nonNull)
                       .filter(p -> !p.isEmpty())
                       .forEach(changes -> {
-                        String id = path.toString().split("\\.")[0];
+                        String id = path.toFile().getName().split("\\.")[0];
                         System.out.println(id + " : " + changes);
 
                         StringBuilder sb = new StringBuilder();
