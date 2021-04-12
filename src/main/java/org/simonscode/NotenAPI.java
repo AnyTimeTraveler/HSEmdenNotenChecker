@@ -87,13 +87,13 @@ public class NotenAPI {
 
     login(username, password);
 
-    connect(".auflistung");
+    clickOnLink(".auflistung");
 
-    connect(".liste > li:nth-child(4) > a:nth-child(1)");
+    clickOnLink(".liste > li:nth-child(4) > a:nth-child(1)");
 
-    connect("a.regular:nth-child(2)");
+    clickOnLink("a.regular:nth-child(2)");
 
-    connect("ul.treelist:nth-child(4) > li:nth-child(1) > a:nth-child(3)");
+    clickOnLink("ul.treelist:nth-child(4) > li:nth-child(1) > a:nth-child(3)");
 
     Element table = doc.getElementsByTag("table").last();
 
@@ -139,7 +139,7 @@ public class NotenAPI {
     doc = resp.parse();
   }
 
-  private void connect(String cssQuery) throws IOException {
+  private void clickOnLink(String cssQuery) throws IOException {
     String href = doc.select(cssQuery).first().attr("href");
 
     resp = Jsoup.connect(
