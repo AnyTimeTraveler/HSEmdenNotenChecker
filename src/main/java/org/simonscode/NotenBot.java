@@ -8,8 +8,10 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Stream;
@@ -48,31 +50,35 @@ public class NotenBot extends TelegramLongPollingBot {
                   .forEach(path -> Stream.of(path)
                       .map(p -> {
                         try {
-                          return Files.readString(p);
+                          return Optional.ofNullable(Files.readString(p));
                         } catch (IOException e) {
                           e.printStackTrace();
-                          return null;
+                          return Optional.<String>empty();
                         }
                       })
-                      .filter(Objects::nonNull)
-                      .map(u -> {
+                      .flatMap(Optional::stream)
+                      .map(username -> {
+                        System.out.println("Checking grades for " + username + "...");
+                        HashMap<String,Double> newGrades = null;
                         try {
-                          System.out.println("Checking grades for " + u + "...");
-                          return new NotenAPI().get_new_entries(u);
+                          newGrades = new NotenAPI().get_new_entries(username);
                         } catch (IOException e) {
                           e.printStackTrace();
-                          return null;
                         }
+                        return Optional.ofNullable(newGrades);
                       })
-                      .filter(Objects::nonNull)
-                      .filter(p -> !p.isEmpty())
-                      .forEach(changes -> {
+                      .flatMap(Optional::stream)
+                      .forEach(newGrades -> {
                         String id = path.toFile().getName().split("\\.")[0];
-                        System.out.println(id + " : " + changes);
+                        System.out.println(id + " : " + newGrades);
 
                         StringBuilder sb = new StringBuilder();
-                        sb.append("Neue Note:\n");
-                        for (Entry<String, Double> entry : changes.entrySet()) {
+                        sb.append("Neue Note");
+                        if (newGrades.size()>1){
+                          sb.append('n');
+                        }
+                        sb.append(":\n");
+                        for (Entry<String, Double> entry : newGrades.entrySet()) {
                           sb.append(entry.getKey());
                           sb.append(" : ");
                           sb.append(entry.getValue());
